@@ -8,8 +8,9 @@ from models.base_model import BaseModel
 class Client(BaseModel):
     """the User class"""
     full_name = ""
-    Business_name = ""
+    business_name = ""
     email = ""
     password = ""
     phone_number = ""
-    location = ""
+    sub_county= ""
+    area_and_street = ""
