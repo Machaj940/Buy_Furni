@@ -6,5 +6,5 @@ from models.base_model import BaseModel
 
 
 class County(BaseModel):
-    """class County - we'll focus on Nairobi, Kiambu, Machakos"""
-    name = ""
+    """class County - we"ll focus on Nairobi"""
+    name = "Nairobi"
