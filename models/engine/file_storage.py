@@ -36,6 +36,7 @@ class FileStorage:
         '''deserializes the JSON file to __objects.'''
         from models.base_model import BaseModel
         from models.user import User
+        from models.client import Client
 
         try:
             with open(FileStorage.__file_path, encoding="UTF8") as fd:
