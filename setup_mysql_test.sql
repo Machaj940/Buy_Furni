@@ -1,0 +1,1 @@
+CREATE DATABASE IF NOT EXISTS buy_furni_test_db;
