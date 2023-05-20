@@ -48,7 +48,7 @@ class Buy_furni_Command(cmd.Cmd):
             print("** class doesn't exist **")
             return
 
-         idx = 1
+        idx = 1
 
         while (idx < len(args)):
             parameter = args[idx]
