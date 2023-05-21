@@ -52,7 +52,7 @@ class BaseModel:
         """
         cp_dct = dict(self.__dict__)
         try:
-            del cp_dct['_sa_instance_state']
+            del cp_dct['_sa_instance_county']
         except ValueError:
             pass
         cp_dct["__class__"] = self.__class__.__name__
