@@ -2,10 +2,11 @@
 """This file contains the entry point of the Buy_furni command interpreter"""
 
 
+import re
 import cmd
 import json
 import shlex
-from models.engine.file_storage import FileStorage
+import models
 from models.base_model import BaseModel
 from models.user import User
 from models.client import Client
@@ -21,15 +22,16 @@ class Buy_furni_Command(cmd.Cmd):
     prompt = "(Buy_Furni) "
 
 
-    def emptyline(self):
-        pass
-
     def do_quit(self, args):
-        """Exits from the console"""
+        '''
+            Quit command to exit the program.
+        '''
         return True
 
     def do_EOF(self, args):
-        """Gives a clean way to exit interpretor"""
+        '''
+            Exits after receiving the EOF signal.
+        '''
         return True
 
     def do_create(self, args):
@@ -41,29 +43,31 @@ class Buy_furni_Command(cmd.Cmd):
             print("** class name missing **")
             return
         try:
-            args = shlex.split(args)
+            args = re.split("\s|=", args)
             new_instance = eval(args[0])()
 
-        except:
+            for idx in range(1, len(args), 2):
+                key = args[idx]
+                value = args[idx + 1]
+                try:
+                    new_instance.__getattribute__(key)
+                except AttributeError:
+                    continue
+                if re.search("^\".*\"$", value) is not None:
+                    value = value.replace("_", " ")
+                    value = value.replace("\"", "")
+                elif "." in value:
+                    value = float(value)
+                elif re.search("\d.*", value) is not None:
+                    value = int(value)
+                else:
+                    continue
+                setattr(new_instance, key, value)
+            new_instance.save()
+            print(new_instance.id)
+        except NameError:
             print("** class doesn't exist **")
             return
-
-        idx = 1
-
-        while (idx < len(args)):
-            parameter = args[idx]
-            param = parameter.split("=")
-            try:
-                obj_param = new_instance.__getattribute__(param[0])
-                if type(obj_param) == type(param[1]):
-                    setattr(new_instance, param[0], param[1])
-                else:
-                    pass
-            except ValueError:
-                pass
-            idx += 1
-        new_instance.save()
-        print(new_instance.id)
 
     def do_show(self, args):
         '''
@@ -77,7 +81,8 @@ class Buy_furni_Command(cmd.Cmd):
         if len(args) == 1:
             print("** instance id missing **")
             return
-        storage = FileStorage()
+        storage = models.storage
+#        storage = FileStorage()
         storage.reload()
         obj_dict = storage.all()
         try:
@@ -106,7 +111,7 @@ class Buy_furni_Command(cmd.Cmd):
             return
         class_name = args[0]
         class_id = args[1]
-        storage = FileStorage()
+        storage = models.storage
         storage.reload()
         obj_dict = storage.all()
         try:
@@ -127,21 +132,24 @@ class Buy_furni_Command(cmd.Cmd):
             based or not on the class name.
         '''
         obj_list = []
-        storage = FileStorage()
+        storage = models.storage
         storage.reload()
-        objects = storage.all()
         try:
             if len(args) != 0:
                 eval(args)
+            if len(args) == 0:
+                objects = storage.all()
+            else:
+                objects = storage.all(args)
         except NameError:
             print("** class doesn't exist **")
             return
         for key, val in objects.items():
             if len(args) != 0:
                 if type(val) is eval(args):
-                    obj_list.append(str(val))
+                    obj_list.append(val)
             else:
-                obj_list.append(str(val))
+                obj_list.append(val)
 
         print(obj_list)
 
@@ -150,7 +158,7 @@ class Buy_furni_Command(cmd.Cmd):
             Update an instance based on the class name and id
             sent as args.
         '''
-        storage = FileStorage()
+        storage = models.storage
         storage.reload()
         args = shlex.split(args)
         if len(args) == 0:
@@ -185,12 +193,18 @@ class Buy_furni_Command(cmd.Cmd):
         setattr(obj_value, args[2], args[3])
         obj_value.save()
 
+    def emptyline(self):
+        '''
+            Prevents printing anything when an empty line is passed.
+        '''
+        pass
+
     def do_count(self, args):
         '''
             Counts/retrieves the number of instances.
         '''
         obj_list = []
-        storage = FileStorage()
+        storage = models.storage
         storage.reload()
         objects = storage.all()
         try:
@@ -208,12 +222,15 @@ class Buy_furni_Command(cmd.Cmd):
         print(len(obj_list))
 
     def default(self, args):
-        '''Catches all the function names that are not expicitly defined.'''
+        '''
+            Catches all the function names that are not expicitly defined.
+        '''
         functions = {"all": self.do_all, "update": self.do_update,
                      "show": self.do_show, "count": self.do_count,
-                     "destroy": self.do_destroy}
+                     "destroy": self.do_destroy, "update": self.do_update}
         args = (args.replace("(", ".").replace(")", ".")
                 .replace('"', "").replace(",", "").split("."))
+
         try:
             cmd_arg = args[0] + " " + args[2]
             func = functions[args[1]]
@@ -223,4 +240,5 @@ class Buy_furni_Command(cmd.Cmd):
 
 
 if __name__ == '__main__':
+    ''' Entry point for the loop '''
     Buy_furni_Command().cmdloop()
